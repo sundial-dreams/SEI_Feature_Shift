@@ -5,6 +5,17 @@ from torchvision.transforms import transforms
 import numpy as np
 import math
 
+freq_map = {
+    "1G": 0, "1.5G": 1, "2.45G": 2, "2.5G": 3, "2.4G": 5
+}
+
+reversed_freq_map = ["1G", "1.5G", "2.45G", "2.5G"]
+
+mod_type_map = {
+    "un": 0
+}
+
+reversed_mod_type_map = ["un"]
 
 class ToDataset(Dataset):
     def __init__(self, data: list, transform=None):
@@ -27,16 +38,26 @@ class ToDataset(Dataset):
 def dataloader(filename: str, rate: float, num_classes=4, transform=None):
     dataset = loadmat(filename)["dataset"]
     train_dataset, test_dataset = [], []
+    # print("dataset = ", dataset)
     new_dataset = []
     for d in dataset:
-        label = d[1][0][0]
-        new_dataset.append([d[0][0], label])
+        label = d[1]
+        # print("label len = ", len(label))
+        new_label = label
+        if len(label) == 0:
+            new_label = int(label[0])
+
+        elif len(label) == 3:
+            # print("in  this")
+            new_label = [int(label[0].strip()), mod_type_map[label[1].strip()], freq_map[label[2].strip()]]
+
+        new_dataset.append([d[0][0], new_label])
 
     label_dataset = [[] for _ in range(num_classes)]
 
     for data in new_dataset:
-        label_dataset[data[1]].append(data)
-
+        # print("label = ", type(data[1][0]))
+        label_dataset[data[1][0]].append(data)
     for i in range(len(label_dataset)):
         t_dataset = label_dataset[i]
         train_size = math.floor(len(t_dataset) * rate)

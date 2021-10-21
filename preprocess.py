@@ -79,17 +79,45 @@ def list_dataset(file_list: list):
     return dataset
 
 
+def list_dataset_v2(files: list):
+    result = []
+    for file in files:
+        pattens = [r"(?<=mod)\d+", r"\w+(?=\_mod)", r"(?<=mod\d\_).+(?=\.bin)"]
+        exps = map(lambda p: re.compile(p), pattens)
+        # filename = os.path.join(dirname, file)
+        label, mod_type, freq = map(lambda e: e.findall(file)[0], exps)
+
+        data = file2dataset(file)
+        # label - 1
+        result.append([data, (int(label) - 1, mod_type, freq)])
+
+    flatten_dataset = []
+
+    for d in result:
+        data, label = d
+        for v in data:
+            flatten_dataset.append([v, label])
+
+    return flatten_dataset
+
+
 def exclude_dataset(excludes: set):
-    return dir2dataset("./raw_data", excludes=excludes)
+    dataset = dir2dataset("./raw_data", excludes=excludes)
+    flatten_dataset = []
+    for d in dataset:
+        data, label = d
+        for v in data:
+            flatten_dataset.append([v, label])
+    return flatten_dataset
 
 
-def std_dataset(in_file, out_file, normal=True):
+def std_dataset(in_file, out_file, normal=False):
     dataset = loadmat(in_file)["dataset"]
     data = []
     label = []
     for d in dataset:
         data.append(d[0][0])
-        label.append(d[1][0][0])
+        label.append(d[1])
     data = np.array(data)
     label = label
     z_data1 = scale(data)
@@ -100,14 +128,44 @@ def std_dataset(in_file, out_file, normal=True):
         dataset1.append([z_data1[i], label[i]])
     save_dataset(out_file, dataset1)
 
+# data, (num, mod, freq)
 
 if __name__ == "__main__":
-    # d = list_dataset(["./raw_data/un_mod1_2.4G.bin", "./raw_data/un_mod2_2.4G.bin", "./raw_data/un_mod3_2.4G.bin",
+
+    # d = list_dataset_v2(["./raw_data/un_mod1_2.4G.bin", "./raw_data/un_mod2_2.4G.bin", "./raw_data/un_mod3_2.4G.bin",
     #                   "./raw_data/un_mod4_2.4G.bin"])
-    # save_dataset("./dataset/dataset-include[un_mod, 2.4G].mat", d)
     #
-    # d = exclude_dataset({"./raw_data/un_mod1_2.4G.bin", "./raw_data/un_mod2_2.4G.bin", "./raw_data/un_mod3_2.4G.bin",
-    #                      "./raw_data/un_mod4_2.4G.bin"})
+    # print(np.shape(d))
+    #
+    # save_dataset("./dataset/dataset-frequency-2.4G.mat", d)
+    std_dataset("./dataset/dataset-frequency-2.4G.mat", "./dataset/dataset-frequency-2.4G-std.mat")
+
+    #
+    # d = exclude_dataset({"un_mod1_2.4G.bin", "un_mod2_2.4G.bin", "un_mod3_2.4G.bin",
+    #                      "un_mod4_2.4G.bin"})
+    # print(d)
     # save_dataset("./dataset/dataset-exclude[un_mod, 2.4G].mat", d)
-    std_dataset("./dataset/dataset-exclude[un_mod, 2.4G].mat", "./dataset/dataset-exclude[un_mod, 2.4G]-std.mat", False)
-    std_dataset("./dataset/dataset-include[un_mod, 2.4G].mat", "./dataset/dataset-include[un_mod, 2.4G]-std.mat", False)
+    # std_dataset("./dataset/dataset-exclude[un_mod, 2.4G].mat", "./dataset/dataset-exclude[un_mod, 2.4G]-std.mat", False)
+    # std_dataset("./dataset/dataset-include[un_mod, 2.4G].mat", "./dataset/dataset-include[un_mod, 2.4G]-std.mat", False)
+    # d = loadmat("./dataset/dataset-exclude[un_mod, 2.4G].mat")["dataset"]
+    # print(np.shape(d))
+
+    # d = list_dataset("./raw_data/un_mod1")
+
+    # d = list_dataset_v2(["./raw_data/un_mod1_1.5G.bin",
+    #                      "./raw_data/un_mod1_1G.bin",
+    #                      "./raw_data/un_mod2_1.5G.bin",
+    #                      "./raw_data/un_mod2_1G.bin",
+    #                      "./raw_data/un_mod3_1.5G.bin",
+    #                      "./raw_data/un_mod3_1G.bin",
+    #                      "./raw_data/un_mod4_2.5G.bin",
+    #                      "./raw_data/un_mod4_2.45G.bin"])
+    # print(np.shape(d))
+    # save_dataset("./dataset/dataset-frequency-un_mod-all_freq.mat", d)
+    # print(d)
+
+    # d = loadmat("./dataset/dataset-frequency-un_mod-all_freq-std.mat")["dataset"]
+    # std_dataset("./dataset/dataset-frequency-un_mod-all_freq.mat", "./dataset/dataset-frequency-un_mod-all_freq-std.mat")
+
+    # print(d)
+    pass

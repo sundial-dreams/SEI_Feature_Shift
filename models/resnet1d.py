@@ -134,10 +134,10 @@ class ResNet(nn.Module):
 
 model_config = [
     # {"channel": 4, "layer": 2, "kernel_size": 16},
-    {"channel": 8, "layer": 2, "kernel_size": 4},
+    {"channel": 8, "layer": 2, "kernel_size": 8},
     # {"channel": 32, "layer": 2, "kernel_size": 4},
-    # {"channel": 64, "layer": 2, "kernel_size": 4},
-    {"channel": 128, "layer": 2, "kernel_size": 2},
+    {"channel": 64, "layer": 2, "kernel_size": 4},
+    {"channel": 256, "layer": 2, "kernel_size": 2},
     # {"channel": 256, "layer": 2, "kernel_size": 2}
 ]
 

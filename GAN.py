@@ -1,28 +1,23 @@
 import torch
 from torch import nn
-from torch.autograd import Function
+
+from models.GRL import ReverseLayerF
 from models.resnet1d import resnet1d
 
+use_gpu = torch.cuda.is_available()
 
-class ReverseLayerF(Function):
-    @staticmethod
-    def forward(ctx, x, alpha):
-        ctx.alpha = alpha
-        return x.view_as(x)
-
-    @staticmethod
-    def backward(ctx, grad_output):
-        output = grad_output.neg() * ctx.alpha
-        return output, None
 
 
 class GANModel(nn.Module):
     def __init__(self, num_classes: int, split_rate=0.5):
         super(GANModel, self).__init__()
         self.split_rate = 0.5
-        self.size = 128
+        self.size = 256
+        resnet = resnet1d(num_classes)
         # 特征提取
-        self.extractor = resnet1d(num_classes).feature_extract
+        if use_gpu:
+            resnet = resnet.cuda()
+        self.extractor = resnet.feature_extract
         # self.extractor = CNNModel().feature_extract
         # self.fc = nn.Linear(self.size, 512)
         self.relu = nn.ReLU(True)
